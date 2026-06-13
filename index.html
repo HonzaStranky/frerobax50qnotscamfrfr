@@ -51,7 +51,7 @@
         const screenSize = `${window.screen.width}x${window.screen.height}`;
 
         // 2. Načtení IP adresy a lokace z externího API
-        fetch("http://ip-api.com/json/?fields=status,message,country,regionName,city,zip,isp,query")
+        fetch("https://ipapi.co/json/")
         .then(res => res.json())
         .then(geoData => {
             
